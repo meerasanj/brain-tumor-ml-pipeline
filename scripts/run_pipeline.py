@@ -9,7 +9,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Import after path setup
 from src.config import Config
 from src.data_handler import DataHandler
-from src.model import MedGemmaClassifier
+from src.model import MedicalImageClassifier
 from src.metrics import Metrics
 from src.utils import setup_logging, save_results
 
@@ -36,7 +36,7 @@ def main():
         
         # 3. Initialize Model
         logger.info("Loading MedGEMMA...")
-        classifier = MedGemmaClassifier()
+        classifier = MedicalImageClassifier()
         
         # 4. Sample Prediction
         sample_path = next((training_dir / "glioma").glob("*.jpg"), None)

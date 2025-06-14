@@ -1,41 +1,41 @@
+import os
+import logging
+from pathlib import Path
 import kagglehub
+import subprocess
 import torch
 from torchvision import transforms
 from PIL import Image
-from pathlib import Path
 from src.config import Config
-import logging
-import subprocess
-import sys
 
 class DataHandler:
     @staticmethod
     def download_dataset():
-        """Downloads dataset and returns path to Training directory"""
-        dataset_path = Config.DATA_DIR
+        """Downloads and extracts the brain tumor dataset"""
+        dataset_path = Config.DATA_DIR / "brain-tumor-mri-dataset"
         
-        # Check if Training folder already exists
-        training_dir = dataset_path / "Training"
-        if training_dir.exists():
-            return training_dir
+        # Check if dataset already exists
+        if (dataset_path / "Training").exists():
+            return dataset_path / "Training"
             
         try:
             logging.info(f"Downloading dataset to {dataset_path}")
             
-            # Using Kaggle CLI
+            # Using Kaggle CLI for reliable downloads
             subprocess.run([
                 "kaggle", "datasets", "download",
                 "-d", "masoudnickparvar/brain-tumor-mri-dataset",
-                "-p", str(dataset_path),
+                "-p", str(Config.DATA_DIR),
                 "--unzip",
-                "--force"  # Ensure fresh download
+                "--force"
             ], check=True)
             
-            # The dataset extracts directly into data/Training and data/Testing
+            # Verify the extracted folder structure
+            training_dir = dataset_path / "Training"
             if not training_dir.exists():
                 raise FileNotFoundError(
                     f"Training directory not found at {training_dir}\n"
-                    f"Actual contents: {list(dataset_path.glob('*'))}"
+                    f"Found: {list(dataset_path.glob('*'))}"
                 )
                 
             return training_dir
@@ -49,12 +49,28 @@ class DataHandler:
 
     @staticmethod
     def preprocess_image(image_path: Path) -> torch.Tensor:
-        """Preprocess an image for MedGEMMA"""
+        """Preprocesses an image for ViT model"""
         transform = transforms.Compose([
-            transforms.Resize(Config.IMAGE_SIZE),
+            transforms.Resize(256),          # Resize to slightly larger than target
+            transforms.CenterCrop(224),      # ViT requires 224x224 input
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                               std=[0.229, 0.224, 0.225])
+            transforms.Normalize(            # MRI-specific normalization
+                mean=[0.485, 0.456, 0.406], # Standard ImageNet stats
+                std=[0.229, 0.224, 0.225]
+            )
         ])
-        img = Image.open(image_path).convert('RGB')
-        return transform(img)
+        
+        try:
+            img = Image.open(image_path).convert('RGB')  # Ensure 3 channels
+            return transform(img)
+        except Exception as e:
+            logging.error(f"Error processing {image_path}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_class_distribution(data_dir: Path) -> dict:
+        """Returns count of images per class"""
+        return {
+            cls: len(list((data_dir / cls).glob("*.jpg"))) 
+            for cls in Config.CLASSES
+        }

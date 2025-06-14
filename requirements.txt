@@ -1,6 +1,19 @@
-kagglehub>=0.1.0
-torch>=2.0.0
-transformers>=4.30.0
-pillow>=9.0.0
-scikit-learn>=1.0.0
-python-dotenv>=0.19.0
+# Core dependencies
+torch==2.3.0
+torchvision==0.18.0
+transformers==4.41.0
+
+# Image processing
+pillow==10.3.0
+
+# Data handling
+kagglehub==0.2.0
+python-dotenv==1.0.1
+
+# Evaluation
+scikit-learn==1.5.0
+numpy==1.26.4  # Required by scikit-learn
+
+# Visualization
+matplotlib==3.8.4
+seaborn==0.13.2
