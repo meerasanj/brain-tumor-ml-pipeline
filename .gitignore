@@ -9,8 +9,10 @@ __pycache__/
 
 # Environment
 .env
+.venv/
 venv/
 
 # IDE
 .vscode/
-.idea/
+.idea/*.egg-info/
+__pycache__/
