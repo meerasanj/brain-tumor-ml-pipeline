@@ -12,17 +12,21 @@ class MedicalImageClassifier:
         self.model = ViTForImageClassification.from_pretrained(
             Config.MODEL_NAME,
             num_labels=len(Config.CLASSES),
-            ignore_mismatched_sizes=True  # Allows for custom num_classes
+            ignore_mismatched_sizes=True
         ).to(self.device)
 
     def predict(self, image: torch.Tensor) -> dict:
+        """Predict tumor class from preprocessed image tensor"""
         inputs = self.processor(images=image, return_tensors="pt").to(self.device)
+        
         with torch.no_grad():
             outputs = self.model(**inputs)
         
         probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        pred_idx = probs.argmax().item()
+        
         return {
-            "class": Config.CLASSES[probs.argmax()],
-            "confidence": probs.max().item(),
+            "class": Config.CLASSES[pred_idx],
+            "confidence": float(probs[0][pred_idx]),
             "all_probs": {c: float(p) for c, p in zip(Config.CLASSES, probs[0])}
         }

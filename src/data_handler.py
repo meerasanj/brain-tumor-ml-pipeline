@@ -1,76 +1,65 @@
+import torch
 import os
 import logging
 from pathlib import Path
-import kagglehub
-import subprocess
-import torch
-from torchvision import transforms
-from PIL import Image
 from src.config import Config
 
 class DataHandler:
     @staticmethod
     def download_dataset():
-        """Downloads and extracts the brain tumor dataset"""
-        dataset_path = Config.DATA_DIR / "brain-tumor-mri-dataset"
+        """Returns path to Training directory, verifying both Training and Testing folders"""
+        data_dir = Config.DATA_DIR
         
-        # Check if dataset already exists
-        if (dataset_path / "Training").exists():
-            return dataset_path / "Training"
-            
-        try:
-            logging.info(f"Downloading dataset to {dataset_path}")
-            
-            # Using Kaggle CLI for reliable downloads
-            subprocess.run([
-                "kaggle", "datasets", "download",
-                "-d", "masoudnickparvar/brain-tumor-mri-dataset",
-                "-p", str(Config.DATA_DIR),
-                "--unzip",
-                "--force"
-            ], check=True)
-            
-            # Verify the extracted folder structure
-            training_dir = dataset_path / "Training"
-            if not training_dir.exists():
-                raise FileNotFoundError(
-                    f"Training directory not found at {training_dir}\n"
-                    f"Found: {list(dataset_path.glob('*'))}"
-                )
-                
-            return training_dir
-            
-        except subprocess.CalledProcessError as e:
-            logging.error("Download failed. Please ensure:")
-            logging.error("1. You've accepted dataset rules at:")
-            logging.error("   https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset")
-            logging.error("2. Your Kaggle API credentials are valid")
-            raise
+        # Verify both Training and Testing exist
+        training_dir = data_dir / "Training"
+        testing_dir = data_dir / "Testing"
+        
+        if not training_dir.exists():
+            raise FileNotFoundError(
+                f"Training directory not found at {training_dir}\n"
+                "Required structure:\n"
+                "data/\n"
+                "├── Training/\n"
+                "│   ├── glioma/\n"
+                "│   ├── meningioma/\n"
+                "│   ├── pituitary/\n"
+                "│   └── notumor/\n"
+                "└── Testing/\n"
+                "    ├── glioma/\n"
+                "    ├── ... (same classes as Training)"
+            )
+
+        # Verify all class folders exist in both directories
+        for folder in [training_dir, testing_dir]:
+            for cls in Config.CLASSES:
+                if not (folder / cls).exists():
+                    raise FileNotFoundError(
+                        f"Missing class folder: {folder/cls}\n"
+                        f"Each of {Config.CLASSES} must exist in both Training/ and Testing/"
+                    )
+
+        logging.info(f"Found valid dataset structure at {data_dir}")
+        return training_dir
 
     @staticmethod
     def preprocess_image(image_path: Path) -> torch.Tensor:
         """Preprocesses an image for ViT model"""
         transform = transforms.Compose([
-            transforms.Resize(256),          # Resize to slightly larger than target
-            transforms.CenterCrop(224),      # ViT requires 224x224 input
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
             transforms.ToTensor(),
-            transforms.Normalize(            # MRI-specific normalization
-                mean=[0.485, 0.456, 0.406], # Standard ImageNet stats
-                std=[0.229, 0.224, 0.225]
-            )
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                               std=[0.229, 0.224, 0.225])
         ])
         
         try:
-            img = Image.open(image_path).convert('RGB')  # Ensure 3 channels
+            img = Image.open(image_path).convert('RGB')
             return transform(img)
         except Exception as e:
             logging.error(f"Error processing {image_path}: {str(e)}")
             raise
 
     @staticmethod
-    def get_class_distribution(data_dir: Path) -> dict:
-        """Returns count of images per class"""
-        return {
-            cls: len(list((data_dir / cls).glob("*.jpg"))) 
-            for cls in Config.CLASSES
-        }
+    def get_testing_dir():
+        """Optional: Helper to get testing directory path"""
+        return Config.DATA_DIR / "Testing"

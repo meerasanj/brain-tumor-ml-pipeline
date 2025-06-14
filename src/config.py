@@ -7,3 +7,10 @@ class Config:
     CLASSES = ["glioma", "meningioma", "pituitary", "notumor"]
     DATA_DIR = BASE_DIR / "data"
     OUTPUT_DIR = BASE_DIR / "outputs"
+    
+    @classmethod
+    def setup(cls):
+        os.makedirs(cls.DATA_DIR, exist_ok=True)
+        os.makedirs(cls.OUTPUT_DIR, exist_ok=True)
+
+Config.setup()
