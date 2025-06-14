@@ -20,41 +20,41 @@ def main():
     try:
         # 1. Data Preparation
         logger.info("Using local dataset from /data directory...")
-        training_dir = PROJECT_ROOT / "data"
+        training_dir = PROJECT_ROOT / "data" / "Training"  # Changed to point to Training folder
 
         # 2. Verify Training folder structure
-        tumor_types = Config.CLASSES  # Use from config instead of hardcoded
+        tumor_types = Config.CLASSES
         valid_structure = all((training_dir / subtype).exists() for subtype in tumor_types)
 
         if not valid_structure:
             found = [d.name for d in training_dir.iterdir() if d.is_dir()]
             raise FileNotFoundError(
                 f"Invalid Training folder structure.\n"
-                f"Expected: {tumor_types}\n"
-                f"Found: {found}"
+                f"Expected subfolders: {tumor_types}\n"
+                f"Found in {training_dir}: {found}"
             )
 
         # 3. Initialize Model
         logger.info(f"Loading {Config.MODEL_NAME}...")
-        classifier = MedicalImageClassifier()  # Updated class name
+        classifier = MedicalImageClassifier()
 
         # 4. Sample Prediction
         sample_path = next((training_dir / "glioma").glob("*.jpg"), None)
         if not sample_path:
-            raise FileNotFoundError("No sample image found in glioma directory")
+            raise FileNotFoundError(f"No sample image found in {training_dir/'glioma'}")
 
         logger.info(f"Processing sample: {sample_path.name}")
         image_tensor = DataHandler.preprocess_image(sample_path)
 
-        # 5. Inference (updated for ViT)
+        # 5. Inference
         logger.info("Running inference...")
-        results = classifier.predict(image_tensor)  # Returns dict with class/confidence
+        results = classifier.predict(image_tensor)
 
         # 6. Evaluation
         logger.info("Evaluating...")
         metrics = Metrics.calculate(
             y_true=["glioma"],
-            y_pred=[results["class"]]  # Use class name instead of index
+            y_pred=[results["class"]]
         )
 
         # 7. Save Results
@@ -76,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

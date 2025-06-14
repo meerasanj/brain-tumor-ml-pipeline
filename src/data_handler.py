@@ -2,12 +2,14 @@ import torch
 import os
 import logging
 from pathlib import Path
+from PIL import Image
+from torchvision import transforms
 from src.config import Config
 
 class DataHandler:
     @staticmethod
-    def download_dataset():
-        """Returns path to Training directory, verifying both Training and Testing folders"""
+    def verify_dataset_structure():
+        """Verifies local dataset structure and returns path to Training directory"""
         data_dir = Config.DATA_DIR
         
         # Verify both Training and Testing exist
@@ -43,23 +45,38 @@ class DataHandler:
 
     @staticmethod
     def preprocess_image(image_path: Path) -> torch.Tensor:
-        """Preprocesses an image for ViT model"""
-        transform = transforms.Compose([
+        """Preprocesses an image for ViT model with proper value handling"""
+        # First transform to get PIL to tensor with [0,1] range
+        to_tensor = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-                               std=[0.229, 0.224, 0.225])
+            transforms.ToTensor()  # This converts to [0,1] range
         ])
+        
+        # Normalization transform to apply separately
+        normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
         
         try:
             img = Image.open(image_path).convert('RGB')
-            return transform(img)
+            tensor = to_tensor(img)
+            
+            # Verify tensor is in [0,1] range before normalization
+            if tensor.min() < 0 or tensor.max() > 1:
+                tensor = torch.clamp(tensor, 0, 1)
+                logging.warning(f"Clamped image values to [0,1] range for {image_path.name}")
+            
+            # Apply normalization
+            tensor = normalize(tensor)
+            
+            return tensor
         except Exception as e:
             logging.error(f"Error processing {image_path}: {str(e)}")
             raise
 
     @staticmethod
     def get_testing_dir():
-        """Optional: Helper to get testing directory path"""
+        """Returns path to Testing directory"""
         return Config.DATA_DIR / "Testing"
