@@ -33,11 +33,19 @@ class MedicalImageClassifier:
         )
 
     def _prepare_batch(self, batch_images):
+        """Convert normalized batch back to PIL images"""
         unnormalized = self.inverse_norm(batch_images)
         return [transforms.ToPILImage()(img) for img in unnormalized]
 
     def train(self, train_loader, val_loader, epochs=5):
+        """Train model with progress tracking"""
         self.model.train()
+        history = {
+            'train_loss': [],
+            'train_acc': [],
+            'val_loss': [],
+            'val_acc': []
+        }
         
         for epoch in range(epochs):
             running_loss = 0.0
@@ -60,70 +68,66 @@ class MedicalImageClassifier:
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
             
+            # Calculate epoch metrics
             train_loss = running_loss / len(train_loader)
             train_acc = 100 * correct / total
+            val_loss, val_acc, val_report = self.evaluate(val_loader)
             
-            val_loss, val_acc = self._simple_evaluate(val_loader)
+            # Store history
+            history['train_loss'].append(float(train_loss))
+            history['train_acc'].append(float(train_acc))
+            history['val_loss'].append(float(val_loss))
+            history['val_acc'].append(float(val_acc))
             
             logging.info(
                 f"Epoch {epoch+1}/{epochs} | "
                 f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | "
                 f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}%"
             )
+        
+        return history, val_report
 
-    def _simple_evaluate(self, loader):
+    def evaluate(self, loader):
+        """Comprehensive model evaluation"""
         self.model.eval()
+        all_preds = []
+        all_labels = []
         running_loss = 0.0
-        correct = 0
-        total = 0
         
         with torch.no_grad():
-            for images, labels in loader:
+            for images, labels in tqdm(loader, desc="Evaluating"):
                 pil_images = self._prepare_batch(images)
                 inputs = self.processor(images=pil_images, return_tensors="pt").to(self.device)
                 labels = labels.to(self.device)
                 
                 outputs = self.model(**inputs)
                 loss = self.criterion(outputs.logits, labels)
-                
                 running_loss += loss.item()
-                _, predicted = torch.max(outputs.logits.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        
-        return running_loss / len(loader), 100 * correct / total
-
-    def evaluate(self, test_loader):
-        """Enhanced evaluation with metrics"""
-        self.model.eval()
-        all_preds = []
-        all_labels = []
-        
-        with torch.no_grad():
-            for images, labels in tqdm(test_loader, desc="Evaluating"):
-                pil_images = self._prepare_batch(images)
-                inputs = self.processor(images=pil_images, return_tensors="pt").to(self.device)
-                labels = labels.to(self.device)
-
-                outputs = self.model(**inputs)
+                
                 preds = torch.argmax(outputs.logits, dim=1)
-
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
-
-        cm = confusion_matrix(all_labels, all_preds)
-        self._plot_confusion_matrix(cm)
-
-        print("\n=== Classification Report ===")
-        print(classification_report(
+        
+        # Calculate metrics
+        val_loss = running_loss / len(loader)
+        val_acc = 100 * np.mean(np.array(all_preds) == np.array(all_labels))
+        
+        # Generate classification report
+        report = classification_report(
             all_labels, all_preds,
             target_names=Config.CLASSES,
+            output_dict=True,
             digits=4
-        ))
+        )
+        
+        # Save confusion matrix
+        self._save_confusion_matrix(all_labels, all_preds)
+        
+        return float(val_loss), float(val_acc), report
 
-        return cm
-
-    def _plot_confusion_matrix(self, cm):
+    def _save_confusion_matrix(self, y_true, y_pred):
+        """Save confusion matrix visualization"""
+        cm = confusion_matrix(y_true, y_pred)
         plt.figure(figsize=(10, 8))
         sns.heatmap(
             cm, annot=True, fmt="d",
@@ -147,7 +151,7 @@ class MedicalImageClassifier:
             outputs = self.model(**inputs)
             probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
             pred_idx = probs.argmax().item()
-
+            
             return {
                 "class": Config.CLASSES[pred_idx],
                 "confidence": float(probs[0][pred_idx]),
@@ -162,5 +166,5 @@ class MedicalImageClassifier:
         )
         loader = DataLoader(dataset, batch_size=8)
         
-        print(f"\n=== Testing on {len(dataset)} unseen images ===")
+        logging.info(f"\nTesting on {len(dataset)} unseen images")
         return self.evaluate(loader)
