@@ -10,16 +10,22 @@ class Config:
     
     # Model
     MODEL_NAME = "google/vit-base-patch16-224-in21k"
-    IMAGE_SIZE = (128, 128)
     CLASSES = ["glioma", "meningioma", "pituitary", "notumor"]
+    
+    # Training
+    BATCH_SIZE = 16
+    IMAGE_SIZE = (224, 224)
     LEARNING_RATE = 3e-5
-    BATCH_SIZE = 4
-    EPOCHS = 3
+    EPOCHS = 5
+    
+    # Evaluation
+    TEST_FOLDER = BASE_DIR / "new_images"  # Folder for unseen test images
     
     @classmethod
     def setup(cls):
         os.makedirs(cls.DATA_DIR, exist_ok=True)
         os.makedirs(cls.OUTPUT_DIR, exist_ok=True)
         os.makedirs(cls.MODEL_DIR, exist_ok=True)
+        os.makedirs(cls.TEST_FOLDER, exist_ok=True)
 
 Config.setup()

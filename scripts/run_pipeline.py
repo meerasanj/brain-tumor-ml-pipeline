@@ -18,26 +18,34 @@ def main():
     try:
         # 1. Verify dataset
         DataHandler.verify_dataset_structure()
-        
+
         # 2. Prepare data
         train_loader, test_loader = DataHandler.get_dataloaders(Config.BATCH_SIZE)
-        
+
         # 3. Initialize and train model
         classifier = MedicalImageClassifier()
         classifier.train(train_loader, test_loader, epochs=Config.EPOCHS)
-        
-        # 4. Sample prediction
+
+        # 4. Evaluate on test set
+        logger.info("Running evaluation on test set...")
+        test_metrics = classifier.evaluate(test_loader)
+
+        # 5. Test on completely new unseen images (e.g., external test folder)
+        logger.info("Running evaluation on unseen test folder...")
+        classifier.test_on_new_images(Config.TEST_FOLDER)
+
+        # 6. Sample prediction
         sample_path = next((Config.DATA_DIR / "Training" / "glioma").glob("*.jpg"))
         image_tensor = DataHandler.preprocess_image(sample_path)
         results = classifier.predict(image_tensor)
-        
-        # 5. Save results
+
+        # 7. Save results
         save_path = save_results({
             "sample": sample_path.name,
             "prediction": results,
             "model": Config.MODEL_NAME
         })
-        
+
         logger.info(f"Results saved to: {save_path}")
         logger.info(f"Predicted: {results['class']} (confidence: {results['confidence']:.2%})")
 
