@@ -2,24 +2,24 @@ import os
 from pathlib import Path
 
 class Config:
-    # Project root directory
+    # Directories
     BASE_DIR = Path(__file__).resolve().parent.parent
-    
-    # Model Configuration
-    MODEL_NAME = "google/vit-base-patch16-224-in21k" 
-    IMAGE_SIZE = (224, 224)  # ViT requires 224x224
-    HUGGINGFACE_TIMEOUT = 30
-    
-    # Dataset Configuration 
-    CLASSES = ["glioma", "meningioma", "pituitary", "notumor"]
     DATA_DIR = BASE_DIR / "data"
     OUTPUT_DIR = BASE_DIR / "outputs"
+    MODEL_DIR = BASE_DIR / "models"
+    
+    # Model
+    MODEL_NAME = "google/vit-base-patch16-224-in21k"
+    IMAGE_SIZE = (128, 128)
+    CLASSES = ["glioma", "meningioma", "pituitary", "notumor"]
+    LEARNING_RATE = 3e-5
+    BATCH_SIZE = 4
+    EPOCHS = 3
     
     @classmethod
     def setup(cls):
-        """Create necessary directories if they don't exist"""
         os.makedirs(cls.DATA_DIR, exist_ok=True)
         os.makedirs(cls.OUTPUT_DIR, exist_ok=True)
+        os.makedirs(cls.MODEL_DIR, exist_ok=True)
 
-# Initialize configuration
 Config.setup()

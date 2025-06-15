@@ -3,80 +3,84 @@ import os
 import logging
 from pathlib import Path
 from PIL import Image
-from torchvision import transforms
+from torchvision import transforms, datasets
 from src.config import Config
 
 class DataHandler:
     @staticmethod
     def verify_dataset_structure():
-        """Verifies local dataset structure and returns path to Training directory"""
+        """Verifies local dataset structure"""
         data_dir = Config.DATA_DIR
         
-        # Verify both Training and Testing exist
         training_dir = data_dir / "Training"
         testing_dir = data_dir / "Testing"
         
         if not training_dir.exists():
-            raise FileNotFoundError(
-                f"Training directory not found at {training_dir}\n"
-                "Required structure:\n"
-                "data/\n"
-                "├── Training/\n"
-                "│   ├── glioma/\n"
-                "│   ├── meningioma/\n"
-                "│   ├── pituitary/\n"
-                "│   └── notumor/\n"
-                "└── Testing/\n"
-                "    ├── glioma/\n"
-                "    ├── ... (same classes as Training)"
-            )
-
-        # Verify all class folders exist in both directories
+            raise FileNotFoundError(f"Training directory not found at {training_dir}")
+            
         for folder in [training_dir, testing_dir]:
             for cls in Config.CLASSES:
                 if not (folder / cls).exists():
-                    raise FileNotFoundError(
-                        f"Missing class folder: {folder/cls}\n"
-                        f"Each of {Config.CLASSES} must exist in both Training/ and Testing/"
-                    )
+                    raise FileNotFoundError(f"Missing class folder: {folder/cls}")
 
-        logging.info(f"Found valid dataset structure at {data_dir}")
-        return training_dir
+        logging.info(f"Dataset structure verified at {data_dir}")
 
     @staticmethod
-    def preprocess_image(image_path: Path) -> torch.Tensor:
-        """Preprocesses an image for ViT model with proper value handling"""
-        # First transform to get PIL to tensor with [0,1] range
+    def get_datasets():
+        """Returns train and test datasets"""
         to_tensor = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
-            transforms.ToTensor()  # This converts to [0,1] range
+            transforms.ToTensor()
         ])
         
-        # Normalization transform to apply separately
         normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
         )
         
-        try:
-            img = Image.open(image_path).convert('RGB')
-            tensor = to_tensor(img)
-            
-            # Verify tensor is in [0,1] range before normalization
-            if tensor.min() < 0 or tensor.max() > 1:
-                tensor = torch.clamp(tensor, 0, 1)
-                logging.warning(f"Clamped image values to [0,1] range for {image_path.name}")
-            
-            # Apply normalization
-            tensor = normalize(tensor)
-            
-            return tensor
-        except Exception as e:
-            logging.error(f"Error processing {image_path}: {str(e)}")
-            raise
+        train_dataset = datasets.ImageFolder(
+            root=Config.DATA_DIR / "Training",
+            transform=transforms.Compose([
+                to_tensor,
+                normalize
+            ])
+        )
+        
+        test_dataset = datasets.ImageFolder(
+            root=Config.DATA_DIR / "Testing",
+            transform=transforms.Compose([
+                to_tensor,
+                normalize
+            ])
+        )
+        
+        return train_dataset, test_dataset
 
     @staticmethod
-    def get_testing_dir():
-        """Returns path to Testing directory"""
-        return Config.DATA_DIR / "Testing"
+    def get_dataloaders(batch_size=32):
+        """Returns train and test dataloaders"""
+        train_set, test_set = DataHandler.get_datasets()
+        
+        train_loader = torch.utils.data.DataLoader(
+            train_set, batch_size=batch_size, shuffle=True, num_workers=2
+        )
+        
+        test_loader = torch.utils.data.DataLoader(
+            test_set, batch_size=batch_size, shuffle=False, num_workers=2
+        )
+        
+        return train_loader, test_loader
+
+    @staticmethod
+    def preprocess_image(image_path: Path) -> torch.Tensor:
+        """Preprocess single image for inference"""
+        transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        
+        img = Image.open(image_path).convert('RGB')
+        return transform(img)
