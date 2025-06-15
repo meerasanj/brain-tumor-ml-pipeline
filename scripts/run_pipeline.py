@@ -32,9 +32,8 @@ def main():
 
         # 5. Save results
         save_path = save_results({
-            "sample": sample_path.name,
-            "prediction": results,
-            "model": Config.MODEL_NAME
+            "model": Config.MODEL_NAME,
+            "test_metrics": test_metrics
         })
 
         logger.info(f"Results saved to: {save_path}")
