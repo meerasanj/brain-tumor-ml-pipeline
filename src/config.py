@@ -16,7 +16,7 @@ class Config:
     BATCH_SIZE = 16
     IMAGE_SIZE = (224, 224)
     LEARNING_RATE = 3e-5
-    EPOCHS = 5
+    EPOCHS = 3
     
     # Evaluation
     TEST_FOLDER = BASE_DIR / "new_images"  # Folder for unseen test images
