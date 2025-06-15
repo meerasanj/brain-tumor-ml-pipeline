@@ -9,6 +9,7 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from src.config import Config
+from src.data import DataHandler
 import logging
 from tqdm import tqdm
 

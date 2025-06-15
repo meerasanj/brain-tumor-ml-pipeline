@@ -30,16 +30,7 @@ def main():
         logger.info("Running evaluation on test set...")
         test_metrics = classifier.evaluate(test_loader)
 
-        # 5. Test on completely new unseen images (e.g., external test folder)
-        logger.info("Running evaluation on unseen test folder...")
-        classifier.test_on_new_images(Config.TEST_FOLDER)
-
-        # 6. Sample prediction
-        sample_path = next((Config.DATA_DIR / "Training" / "glioma").glob("*.jpg"))
-        image_tensor = DataHandler.preprocess_image(sample_path)
-        results = classifier.predict(image_tensor)
-
-        # 7. Save results
+        # 5. Save results
         save_path = save_results({
             "sample": sample_path.name,
             "prediction": results,
