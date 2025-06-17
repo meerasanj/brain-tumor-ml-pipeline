@@ -1,0 +1,89 @@
+{
+  "model": "google/vit-base-patch16-224-in21k",
+  "config": {
+    "batch_size": 16,
+    "image_size": [
+      224,
+      224
+    ],
+    "epochs": 3,
+    "learning_rate": 3e-05
+  },
+  "training_history": {
+    "train_loss": [
+      0.35872936028601077,
+      0.07986150188919376,
+      0.041854863224618906
+    ],
+    "train_acc": [
+      91.31652661064426,
+      98.4593837535014,
+      99.26470588235294
+    ],
+    "val_loss": [
+      0.1273651897303156,
+      0.0628558390748662,
+      0.06566315353218768
+    ],
+    "val_acc": [
+      97.9557069846678,
+      99.31856899488926,
+      98.63713798977854
+    ]
+  },
+  "validation_report": {
+    "glioma": {
+      "precision": 0.9956709956709957,
+      "recall": 0.9913793103448276,
+      "f1-score": 0.9935205183585313,
+      "support": 232.0
+    },
+    "meningioma": {
+      "precision": 0.9735099337748344,
+      "recall": 0.9865771812080537,
+      "f1-score": 0.98,
+      "support": 149.0
+    },
+    "pituitary": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "notumor": {
+      "precision": 0.994535519125683,
+      "recall": 0.978494623655914,
+      "f1-score": 0.986449864498645,
+      "support": 186.0
+    },
+    "accuracy": 0.9863713798977853,
+    "macro avg": {
+      "precision": 0.9682018394156056,
+      "recall": 0.9891127788021988,
+      "f1-score": 0.9780878338095321,
+      "support": 587.0
+    },
+    "weighted avg": {
+      "precision": 0.9867360747313739,
+      "recall": 0.9863713798977853,
+      "f1-score": 0.9864464294779324,
+      "support": 587.0
+    }
+  },
+  "sample_prediction": {
+    "class": "glioma",
+    "confidence": 0.9842298626899719,
+    "all_probs": {
+      "glioma": 0.9842298626899719,
+      "meningioma": 0.006078880280256271,
+      "pituitary": 0.004983388353139162,
+      "notumor": 0.004707749933004379
+    }
+  },
+  "class_labels": [
+    "glioma",
+    "meningioma",
+    "pituitary",
+    "notumor"
+  ]
+}
