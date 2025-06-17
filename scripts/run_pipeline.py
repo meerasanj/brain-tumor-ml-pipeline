@@ -25,7 +25,7 @@ def main():
         
         # 3. Initialize and train model
         classifier = MedicalImageClassifier()
-        train_history, val_report = classifier.train(
+        train_history, val_report, confusion_matrix = classifier.train(
             train_loader, 
             test_loader, 
             epochs=Config.EPOCHS
@@ -47,6 +47,7 @@ def main():
             },
             "training_history": train_history,
             "validation_report": val_report,
+            "confusion_matrix": confusion_matrix.tolist(),  # Convert numpy array to list for JSON
             "sample_prediction": prediction,
             "class_labels": Config.CLASSES
         }
@@ -56,6 +57,12 @@ def main():
         logger.info(f"Results saved to: {save_path}")
         logger.info(f"Sample prediction: {prediction['class']} ({prediction['confidence']:.2%})")
         logger.info(f"Validation accuracy: {val_report['accuracy']:.2%}")
+        
+        # Log confusion matrix
+        logger.info("Confusion Matrix:")
+        logger.info(np.array2string(confusion_matrix, 
+                                 formatter={'int': lambda x: f"{x:4d}"},
+                                 prefix="    "))
         
     except Exception as e:
         logger.exception("Pipeline failed")

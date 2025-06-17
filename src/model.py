@@ -12,6 +12,7 @@ from src.config import Config
 from src.data_handler import DataHandler
 import logging
 from tqdm import tqdm
+import pandas as pd
 
 class MedicalImageClassifier:
     def __init__(self):
@@ -71,7 +72,7 @@ class MedicalImageClassifier:
             # Calculate epoch metrics
             train_loss = running_loss / len(train_loader)
             train_acc = 100 * correct / total
-            val_loss, val_acc, val_report = self.evaluate(val_loader)
+            val_loss, val_acc, val_report, cm = self.evaluate(val_loader)
             
             # Store history
             history['train_loss'].append(float(train_loss))
@@ -84,8 +85,9 @@ class MedicalImageClassifier:
                 f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | "
                 f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}%"
             )
+            logging.info(f"Confusion Matrix:\n{pd.DataFrame(cm, index=Config.CLASSES, columns=Config.CLASSES)}")
         
-        return history, val_report
+        return history, val_report, cm
 
     def evaluate(self, loader):
         """Comprehensive model evaluation"""
@@ -120,14 +122,16 @@ class MedicalImageClassifier:
             digits=4
         )
         
-        # Save confusion matrix
-        self._save_confusion_matrix(all_labels, all_preds)
+        # Generate and save confusion matrix
+        cm = self._save_confusion_matrix(all_labels, all_preds)
         
-        return float(val_loss), float(val_acc), report
+        return float(val_loss), float(val_acc), report, cm
 
     def _save_confusion_matrix(self, y_true, y_pred):
-        """Save confusion matrix visualization"""
+        """Save confusion matrix visualization with both normalized and raw counts"""
         cm = confusion_matrix(y_true, y_pred)
+        
+        # Save raw counts confusion matrix
         plt.figure(figsize=(10, 8))
         sns.heatmap(
             cm, annot=True, fmt="d",
@@ -135,12 +139,30 @@ class MedicalImageClassifier:
             yticklabels=Config.CLASSES,
             cmap="Blues"
         )
-        plt.title("Confusion Matrix")
+        plt.title("Confusion Matrix (Counts)")
         plt.ylabel("True Label")
         plt.xlabel("Predicted Label")
         plt.tight_layout()
-        plt.savefig(Config.OUTPUT_DIR / "confusion_matrix.png")
+        plt.savefig(Config.OUTPUT_DIR / "confusion_matrix_counts.png")
         plt.close()
+        
+        # Save normalized confusion matrix
+        cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(
+            cm_norm, annot=True, fmt=".2f",
+            xticklabels=Config.CLASSES,
+            yticklabels=Config.CLASSES,
+            cmap="Blues"
+        )
+        plt.title("Confusion Matrix (Normalized)")
+        plt.ylabel("True Label")
+        plt.xlabel("Predicted Label")
+        plt.tight_layout()
+        plt.savefig(Config.OUTPUT_DIR / "confusion_matrix_normalized.png")
+        plt.close()
+        
+        return cm
 
     def predict(self, image_tensor):
         """Make prediction on single image"""
