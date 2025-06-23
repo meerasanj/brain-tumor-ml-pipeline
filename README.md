@@ -36,7 +36,7 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
   learning_rate: 3e-5
   ```
 ## Exploratory Data Analysis (EDA) Summary 
-*Note: The EDA can be found in /notebooks.*
+*Note: The EDA can be found in `/notebooks`.*
 ![image](https://github.com/user-attachments/assets/c80f63d3-5ba0-45ca-8cd9-ddecbc1aaea1)
 - Imbalanced training set (20% more no-tumor cases) but balanced testing
 
@@ -68,7 +68,7 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 - Primary confusion: Glioma→Meningioma (11 cases in Epoch 3)
 
 ## Tableau Dashboard Features 
-*Note: The tableau dashboard can be found in /Tableau Dashboard.*
+**Note:** The Tableau dashboard can be found in `/Tableau Dashboard` or directly on [Tableau Public](https://public.tableau.com/views/BrainScanProjectDashboard/Dashboard1?:language=en-US&:sid=&:display_count=n&:origin=viz_share_link).
 
 - At-a-Glance KPIs: The dashboard leads with high-level Key Performance Indicators (KPIs), including the final Testing Accuracy and the model's Average Confidence Score, allowing for an immediate understanding of overall performance.
 - Training vs. Testing Analysis: A dedicated bar chart compares the model's Accuracy and F1-Score on both the training and testing datasets. This feature is crucial for quickly diagnosing potential overfitting.
