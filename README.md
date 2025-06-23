@@ -1,13 +1,21 @@
 # Brain Tumor MRI Classification with Vision Transformers
 
 ## Project Overview 
-This project develops a **Vision Transformer (ViT) model** to classify brain MRI scans into four categories:  
-`glioma` | `meningioma` | `pituitary` | `no tumor`  
+This project develops a **Vision Transformer (ViT) model** to classify brain MRI scans into four categories:  `glioma` | `meningioma` | `pituitary` | `no tumor`  
 
 **Key Objectives**:
 - Achieve >95% validation accuracy for clinical viability  
 - Minimize false negatives in pituitary cases (high mortality risk)  
-- Identify common misclassification patterns  
+- Identify common misclassification patterns
+
+**Tech Stack**
+- Data Analysis & Manipulation: Python, Pandas, NumPy
+- Data Visualization: Matplotlib, Seaborn, Tableau
+- Machine Learning & Deep Learning:
+  - Hugging Face Transformers: To access the pre-trained Vision Transformer (ViT) model.
+  -  PyTorch / TensorFlow: The backend framework for training and fine-tuning the model.
+  - Scikit-learn: For generating the classification report and performance metrics.
+  - Development Environment: Google Colab, Jupyter Notebook
 
 ## Data & Model Description
 ### Dataset ([Kaggle Source](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset))
@@ -50,6 +58,10 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 | Pituitary  | 0.909     | 1.000  | 0.952 |
 | No Tumor   | 0.995     | 0.978  | 0.986 |
 ```
+
+**Confusion Matrix**:
+![image](https://github.com/user-attachments/assets/cf626e96-11a1-4ebd-a677-cd323bf52d1f)
+
 **Key Findings**
 - 98.6% validation accuracy (exceeds clinical benchmarks)
 - 100% recall for pituitary tumors (critical for diagnosis)
