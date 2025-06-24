@@ -26,10 +26,9 @@ def main():
         # 3. Initialize model
         classifier = MedicalImageClassifier()
         
-        # 4. Evaluate initial accuracy before training
-        logger.info("Evaluating initial model performance (before training)")
-        initial_loss, initial_acc, initial_report, initial_cm = classifier.evaluate(test_loader)
-        logger.info(f"Initial validation accuracy: {initial_acc:.2f}%")
+        # 4. Minimal initial evaluation
+        initial_loss, initial_acc, _, initial_cm = classifier.evaluate(test_loader)
+        logger.info(f"\nInitial Accuracy (before training): {initial_acc:.2f}%")
         logger.info("Initial Confusion Matrix:")
         logger.info(np.array2string(initial_cm, 
                                  formatter={'int': lambda x: f"{x:4d}"},
@@ -56,7 +55,10 @@ def main():
                 "epochs": Config.EPOCHS,
                 "learning_rate": Config.LEARNING_RATE
             },
-            "initial_accuracy": initial_acc,  # NEW: added initial accuracy
+            "initial_metrics": { 
+                "accuracy": initial_acc,
+                "confusion_matrix": initial_cm.tolist()
+            },
             "training_history": train_history,
             "validation_report": val_report,
             "confusion_matrix": confusion_matrix.tolist(),
@@ -64,17 +66,9 @@ def main():
             "class_labels": Config.CLASSES
         }
         
-        # 8. Save results
+        # 8. Save results 
         save_path = save_results(results)
         logger.info(f"Results saved to: {save_path}")
-        logger.info(f"Sample prediction: {prediction['class']} ({prediction['confidence']:.2%})")
-        logger.info(f"Final validation accuracy: {val_report['accuracy']:.2%}")
-        
-        # Log confusion matrix
-        logger.info("Final Confusion Matrix:")
-        logger.info(np.array2string(confusion_matrix, 
-                                 formatter={'int': lambda x: f"{x:4d}"},
-                                 prefix="    "))
         
     except Exception as e:
         logger.exception("Pipeline failed")
