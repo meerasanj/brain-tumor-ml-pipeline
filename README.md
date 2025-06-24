@@ -30,6 +30,7 @@ This project leverages a state-of-the-art Vision Transformer (ViT) model to buil
 ### Data Processing:
 
 **Dataset Structure**:
+
 Verified folder structure:
 ```
 data/
@@ -82,7 +83,7 @@ Applied to all images:
 ## Exploratory Data Analysis (EDA) Summary 
 *Note: The EDA can be found in `/notebooks`.*
 ![image](https://github.com/user-attachments/assets/c80f63d3-5ba0-45ca-8cd9-ddecbc1aaea1)
-- Imbalanced training set (20% more no-tumor cases) but balanced testing
+- Imbalanced training set (20% more no-tumor cases) but balanced testing set
 
 ![image](https://github.com/user-attachments/assets/7f8fdb2d-def4-4df4-a4d3-2fa49afc8388)
 - Several key visual differences between glioma and meningioma classes
@@ -147,17 +148,18 @@ This exploratory analysis demonstrates that the ViT model achieves exceptional p
 
 ## How to Run 
 1. Clone the repository
-```bash
+```
 git clone https://github.com/meerasanj/brain-tumor-ml-pipeline.git
 cd brain-tumor-ml-pipeline
 ```
 2. Install dependencies
-```bash
+```
 pip install -r requirements.txt
 ```
-3. Compile and run the script
-```bash
-python scripts/run_pipeline.py # to train the ViT model using 3 epochs
+3. Run the script
+```
+# This command trains the ViT model using the default 3 epochs
+python scripts/run_pipeline.py
 ```
 ## License 
 
