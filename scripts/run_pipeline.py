@@ -23,20 +23,31 @@ def main():
         # 2. Prepare data loaders
         train_loader, test_loader = DataHandler.get_dataloaders(Config.BATCH_SIZE)
         
-        # 3. Initialize and train model
+        # 3. Initialize model
         classifier = MedicalImageClassifier()
+        
+        # 4. Evaluate initial accuracy before training
+        logger.info("Evaluating initial model performance (before training)")
+        initial_loss, initial_acc, initial_report, initial_cm = classifier.evaluate(test_loader)
+        logger.info(f"Initial validation accuracy: {initial_acc:.2f}%")
+        logger.info("Initial Confusion Matrix:")
+        logger.info(np.array2string(initial_cm, 
+                                 formatter={'int': lambda x: f"{x:4d}"},
+                                 prefix="    "))
+        
+        # 5. Train model
         train_history, val_report, confusion_matrix = classifier.train(
             train_loader, 
             test_loader, 
             epochs=Config.EPOCHS
         )
         
-        # 4. Sample prediction
+        # 6. Sample prediction
         sample_path = next((Config.DATA_DIR / "Training" / "glioma").glob("*.jpg"))
         image_tensor = DataHandler.preprocess_image(sample_path)
         prediction = classifier.predict(image_tensor)
         
-        # 5. Prepare results for saving
+        # 7. Prepare results for saving
         results = {
             "model": Config.MODEL_NAME,
             "config": {
@@ -45,21 +56,22 @@ def main():
                 "epochs": Config.EPOCHS,
                 "learning_rate": Config.LEARNING_RATE
             },
+            "initial_accuracy": initial_acc,  # NEW: added initial accuracy
             "training_history": train_history,
             "validation_report": val_report,
-            "confusion_matrix": confusion_matrix.tolist(),  # Convert numpy array to list for JSON
+            "confusion_matrix": confusion_matrix.tolist(),
             "sample_prediction": prediction,
             "class_labels": Config.CLASSES
         }
         
-        # 6. Save results
+        # 8. Save results
         save_path = save_results(results)
         logger.info(f"Results saved to: {save_path}")
         logger.info(f"Sample prediction: {prediction['class']} ({prediction['confidence']:.2%})")
-        logger.info(f"Validation accuracy: {val_report['accuracy']:.2%}")
+        logger.info(f"Final validation accuracy: {val_report['accuracy']:.2%}")
         
         # Log confusion matrix
-        logger.info("Confusion Matrix:")
+        logger.info("Final Confusion Matrix:")
         logger.info(np.array2string(confusion_matrix, 
                                  formatter={'int': lambda x: f"{x:4d}"},
                                  prefix="    "))
