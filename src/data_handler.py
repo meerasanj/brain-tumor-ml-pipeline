@@ -6,14 +6,11 @@ from PIL import Image
 from torchvision import transforms, datasets
 from src.config import Config
 
+# DataHandler class handles all data-related operations for the image classification pipeline.
+# Provides methods for dataset verification, loading, and preprocessing
 class DataHandler:
-    """ 
-    Handles all data-related operations for the image classification pipeline.
-    Provides methods for dataset verification, loading, and preprocessing.
-    """
     @staticmethod
     def verify_dataset_structure():
-        """Verifies local dataset structure"""
         data_dir = Config.DATA_DIR
         
         training_dir = data_dir / "Training"
@@ -29,31 +26,23 @@ class DataHandler:
 
         logging.info(f"Dataset structure verified at {data_dir}")
 
+    # Method to create and return PyTorch datasets for training and testing
     @staticmethod
     def get_datasets():
-        """
-        Creates and returns PyTorch datasets for training and testing.
-        
-        Applies standard image preprocessing transforms:
-        - Resize to 256x256 pixels
-        - Center crop to 224x224 pixels (standard input size for many CNNs)
-        - Convert to tensor format
-        - Normalize using ImageNet statistics for transfer learning compatibility
-        
-        Returns:
-            tuple: (train_dataset, test_dataset) - PyTorch ImageFolder datasets
-        """
+        # Applies standard image preprocessing transforms:
         to_tensor = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor()
+            transforms.Resize(256), # Resize to 256x256 pixels
+            transforms.CenterCrop(224), # Center crop to 224x224 pixels (standard input size for many CNNs)
+            transforms.ToTensor() # Convert to tensor format
         ])
-        
+
+        # Normalize using ImageNet statistics for transfer learning compatibility
         normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
         )
-        
+
+        # PyTorch ImageFolder datasets
         train_dataset = datasets.ImageFolder(
             root=Config.DATA_DIR / "Training",
             transform=transforms.Compose([
@@ -70,13 +59,11 @@ class DataHandler:
             ])
         )
         
-        return train_dataset, test_dataset
+        return train_dataset, test_dataset 
 
+    # Method to create PyTorch DataLoaders for efficient batch processing during training/testing
     @staticmethod
     def get_dataloaders(batch_size=32):
-        """
-        Creates PyTorch DataLoaders for efficient batch processing during training/testing.
-        """
         train_set, test_set = DataHandler.get_datasets()
         
         train_loader = torch.utils.data.DataLoader(
@@ -89,9 +76,9 @@ class DataHandler:
         
         return train_loader, test_loader
 
+    # Preprocess single image for inference
     @staticmethod
     def preprocess_image(image_path: Path) -> torch.Tensor:
-        """Preprocess single image for inference"""
         transform = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
