@@ -1,7 +1,7 @@
 # Brain Tumor MRI Classification with Vision Transformers
 
 ## Project Overview 
-This project develops a **Vision Transformer (ViT) model** to classify brain MRI scans into four categories:  `glioma` | `meningioma` | `pituitary` | `no tumor`  
+This project leverages a state-of-the-art Vision Transformer (ViT) model to build an end-to-end pipeline for medical image analysis. The model is fine-tuned to classify brain MRI scans into four distinct and clinically relevant categories:  `glioma` | `meningioma` | `pituitary` | `no tumor`. The objective is to demonstrate how modern AI architectures can achieve high-accuracy classification, serving as a powerful decision support tool in a medical setting.
 
 **Key Objectives**:
 - Achieve >95% validation accuracy for clinical viability  
@@ -20,13 +20,56 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 ## Data & Model Description
 ### Dataset ([Kaggle Source](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset))
 - 7,043 MRI scans (5,712 training / 1,311 testing)
-- **Class Distribution**:  
+
+**Class Distribution**:  
   ```python
   Training: glioma(1,321), meningioma(1,339), pituitary(1,457), no tumor(1,595)  
   Testing: glioma(300), meningioma(306), pituitary(300), no tumor(405)
   ```
 
-### Model Architecture 
+### Data Processing:
+
+**Dataset Structure**:
+Verified folder structure:
+```
+data/
+├── Training/
+│   ├── glioma/
+│   ├── meningioma/
+│   ├── pituitary/
+│   └── notumor/
+└── Testing/
+    ├── glioma/
+    ├── meningioma/
+    ├── pituitary/
+    └── notumor/
+```
+
+**Image Transformations**
+
+Applied to all images:
+1. Resize: 256×256
+2. Center Crop: 224×224 (ViT input size)
+3. Normalize using ImageNet stats:
+   - Mean: [0.485, 0.456, 0.406]
+   - Std: [0.229, 0.224, 0.225]
+
+**Data Loaders**
+
+| Feature          | Training           | Testing           |
+|------------------|--------------------|-------------------|
+| **Shuffle**      | Yes                | No                |
+| **Batch Size**   | Configurable (16)  | Configurable (16) |
+| **Workers**      | 2                  | 2                 |
+
+**Key Notes**:
+- Automatic label assignment via folder names
+- On-the-fly transformations
+- RGB conversion enforced
+- Identical preprocessing for training/inference
+
+
+### Model Architecture:
 - Base Model: google/vit-base-patch16-224-in21k
 - Fine-Tuning:
   ```python
@@ -35,6 +78,7 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
   image_size: 224x224  
   learning_rate: 3e-5
   ```
+
 ## Exploratory Data Analysis (EDA) Summary 
 *Note: The EDA can be found in `/notebooks`.*
 ![image](https://github.com/user-attachments/assets/c80f63d3-5ba0-45ca-8cd9-ddecbc1aaea1)
@@ -50,6 +94,21 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 - Meningioma→Glioma errors are resolved, worsening Glioma→Meningioma errors
 
 ## Model Evaluation 
+### Performance Benchmarking:
+
+**Initial Untrained Performance:**
+  ```python
+Initial Accuracy (before training): 25.04%  
+Confusion Matrix:  
+[[   3  218   11    0]  
+ [   3  144    2    0]  
+ [   0   20    0    0]  
+ [   0  186    0    0]]
+  ```
+- Matches random chance (25% for 4-class problem)
+- Model initially biased toward meningioma predictions
+
+**Final Trained Performance & Confusion Matrix:**
   ```python
 | Class      | Precision | Recall | F1   |
 |------------|-----------|--------|------|
@@ -59,7 +118,6 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 | No Tumor   | 0.995     | 0.978  | 0.986 |
 ```
 
-**Confusion Matrix**:
 ![image](https://github.com/user-attachments/assets/cf626e96-11a1-4ebd-a677-cd323bf52d1f)
 
 **Key Findings**
@@ -76,7 +134,7 @@ This project develops a **Vision Transformer (ViT) model** to classify brain MRI
 - Temporal Misclassification Tracking: An intuitive line chart tracks the evolution of specific error types (e.g., Glioma→Meningioma) across multiple training epochs. This visual uses direct labeling on each line for enhanced readability, eliminating the need for a separate legend and making trend analysis instantaneous.
 
 ## Conclusion & Next Steps
-This exploratory analysis demonstrates that the ViT model achieves exceptional performance (98.6% accuracy) in classifying brain tumor MRI scans, despite inherent challenges:
+This exploratory analysis demonstrates that the ViT model achieves exceptional performance (98.6% accuracy) compared to the initial performance (25.04% accuracy) in classifying brain tumor MRI scans, despite inherent challenges:
 - Class imbalance in training data (20% fewer glioma/meningioma samples)
 - Textural similarities between glioma and meningioma (11 misclassified cases)
 - Limited pituitary samples (though recall remains perfect)
