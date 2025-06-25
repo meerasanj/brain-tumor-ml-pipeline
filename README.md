@@ -29,7 +29,7 @@ This project leverages a state-of-the-art Vision Transformer (ViT) model to buil
 
 ### Data Processing:
 
-**Dataset Structure**:
+**1. Dataset Structure**:
 
 Verified folder structure:
 ```
@@ -46,16 +46,16 @@ data/
     └── notumor/
 ```
 
-**Image Transformations**
+**2. Image Transformations**
 
 Applied to all images:
 1. Resize: 256×256
 2. Center Crop: 224×224 (ViT input size)
-3. Normalize using ImageNet stats:
+3. Normalize using [ImageNet stats](https://docs.pytorch.org/vision/stable/transforms.html#torchvision.transforms.Normalize):  
    - Mean: [0.485, 0.456, 0.406]
    - Std: [0.229, 0.224, 0.225]
 
-**Data Loaders**
+**3. Data Loaders**
 
 | Feature          | Training           | Testing           |
 |------------------|--------------------|-------------------|
@@ -71,7 +71,7 @@ Applied to all images:
 
 
 ### Model Architecture:
-- Base Model: google/vit-base-patch16-224-in21k
+- Hugging Face Base Model: [google/vit-base-patch16-224-in21k](https://huggingface.co/google/vit-base-patch16-224-in21k)
 - Fine-Tuning:
   ```python
   epochs: 3  
